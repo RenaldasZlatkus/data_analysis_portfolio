@@ -84,7 +84,7 @@ is.character(dataset$user_type)
 summary(dataset)
 plot_missing(dataset)
 
-#----------------------------Check max and min length of start_station_name, end_station_name, start_station_id, 
+#Check max and min length of start_station_name, end_station_name, start_station_id, 
 #end_station_id, and member_casual variable length to see for any irregularities.
 
 max(nchar(dataset$start_station), na.rm = T)
@@ -142,7 +142,7 @@ check_8 <- dataset[dataset$end_station %like% "WATSON", ]
 
 rm(check_1, check_2, check_3, check_4, check_5, check_6, check_7, check_8)
 
-#-----------------------------Investigating NA data
+#Investigating NA data
 
 check_9 <- dataset %>% 
   filter(is.na(start_station))
@@ -150,7 +150,7 @@ check_9 <- dataset %>%
 check_10 <- dataset %>% 
   filter(is.na(end_station))
 
-#-----------------------------------Data enrichment, find streets through latitude and longitude data.
+#Data enrichment, find streets through latitude and longitude data.
 
 enriched_start_station <- check_9 %>% 
   reverse_geocode(lat = start_lat, long = start_lng, method = "osm",
@@ -162,7 +162,7 @@ enriched_end_station <- check_10 %>%
                   full_results = TRUE) %>% 
   select(ride_id, address, road)
 
-#-----------------------------------Combine road column with A (address) into one column.
+#Combine road column with A (address) into one column.
 
 enriched_start <- as.data.table(enriched_start_station) %>% 
   separate(address, c("A", "B", ",")) %>%
@@ -174,7 +174,7 @@ enriched_end <- as.data.table(enriched_end_station) %>%
   mutate(end_station = coalesce(road, A)) %>% 
   select(c(ride_id, end_station))             
 
-#---------------------------------Merge dataset with the enriched data.
+#Merge dataset with the enriched data.
 
 dataset <- as.data.table(dataset)
 
@@ -198,11 +198,8 @@ plot_missing(dataset)
 
 remove(enriched_end, enriched_end_station, enriched_start, enriched_start_station, merge1, merge2, check_9, check_10)
 gc()
-#-----------------------------------------------------------------------------------------------------BACKUP after enrichment
-backup <- dataset 
-dataset <- backup
 
-#----------------------------Check for duplicated data.
+#Check for duplicated data.
 
 dup_data<- dataset %>% 
   get_dupes(ride_id)
@@ -222,7 +219,7 @@ dataset$duplicate_data <- NULL
 
 rm(dup_data)
 
-#------------------------------Creat a column with trip duration
+#Creat a column with trip duration
 
 dataset$trip_duration <- as.numeric(difftime(dataset$ended_at, dataset$started_at))
 
@@ -255,16 +252,17 @@ dataset <- subset(dataset, trip_duration > 59) %>%
   select(-c("start_station_id", "end_station_id"))
 
 
-#-------------------------------Add month, day, and day_of_week columns into dataset. 
+#Add month, day, and day_of_week columns into dataset. 
 
 dataset$month <- format(as.Date(dataset$started_at), "%m")
 dataset$day <- format(as.Date(dataset$started_at), "%d")
 dataset$day_of_week <- format(as.Date(dataset$started_at), "%A")
 
 
-#----------------------------Remove white space in every column that has data type as.character.
+#Remove white space in every column that has data type as.character.
 
 dataset %>% mutate(across(where(is.character), str_trim))
 
+#Save cleaned data
 fwrite(dataset, file = "cyclistic_data_wrangling_process.csv", sep = ",", na = "NA", row.names = FALSE, col.names = TRUE)
-write.csv(dataset, file = "cyclistic_data_wrangling_process.csv", sep = ",", na = "NA", row.names = FALSE, col.names = TRUE)
+#write.csv(dataset, file = "cyclistic_data_wrangling_process.csv", sep = ",", na = "NA", row.names = FALSE, col.names = TRUE)
