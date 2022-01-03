@@ -124,7 +124,7 @@ dim(dataset)
 ```
 
 ```{r Rename columns, echo=TRUE}
-#------------------------------Rename column names.
+#Rename column names.
 
 setnames(dataset, old =  c("rideable_type", "start_station_name", "end_station_name", "member_casual"),
          new = c("bike_type", "start_station", "end_station", "user_type"))
